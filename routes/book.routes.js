@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/', findAll);
 router.post('/', bookValidator, create);
 router.get('/:id', findOne);
-router.put('/:id', update);
+router.put('/:id', bookValidator, update);
 router.delete('/:id', remove);
 
 export default router;
