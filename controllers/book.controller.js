@@ -1,4 +1,7 @@
+'use strict';
+
 import Book from '../models/book.model.js';
+import eventEmitter from '../utils/event_emitter.util.js';
 
 const books = [];
 
@@ -12,8 +15,9 @@ const create = (req, res) => {
         req.body.genre,
         req.body.price,
     );
-
     books.push(book);
+
+    eventEmitter.getInstance().emit('book_created', book);
     res.status(201).json({ message: 'Book created successfully', book });
 }
 
@@ -23,30 +27,44 @@ const findAll = (req, res) => {
 
 const findOne = (req, res) => {
     const book = books.find((book) => book.id === parseInt(req.params.id));
-    book ? res.send(book) : res.status(404).send({ error: 'The book with the given ID was not found' });
+    if (book) {
+        eventEmitter.getInstance().emit('book_found', book);
+        res.send(book);
+    }
+    else {
+        res.status(404).send({ error: 'Book: Not Found' });
+    }
 }
 
 const update = (req, res) => {
     const book = books.find((book) => book.id === parseInt(req.params.id));
     if (!book) {
-        res.status(404).send({ error: 'The book with the given ID was not found' });
+        eventEmitter.getInstance().emit('book_not_found', book);
+        res.status(404).send({ error: 'Book: Not Found' });
     }
-    book.title = req.body.title;
-    book.description = req.body.description;
-    book.author = req.body.author;
-    book.genre = req.body.genre;
-    book.price = req.body.price;
-    res.send(book);
+    else {
+        eventEmitter.getInstance().emit('book_found', book);
+        book.title = req.body.title;
+        book.description = req.body.description;
+        book.author = req.body.author;
+        book.genre = req.body.genre;
+        book.price = req.body.price;
+        res.send(book);
+    }
 }
 
 const remove = (req, res) => {
     const book = books.find((book) => book.id === parseInt(req.params.id));
     if (!book) {
-        res.status(404).send({ error: 'The book with the given ID was not found' });
+        eventEmitter.getInstance().emit('book_not_found', book);
+        res.status(404).send({ error: 'Book: Not Found' });
     }
-    const index = books.indexOf(book);
-    books.splice(index, 1);
-    res.send(book);
+    else {
+        eventEmitter.getInstance().emit('book_found', book);
+        const index = books.indexOf(book);
+        books.splice(index, 1);
+        res.send(book);
+    }
 }
 
 export { create, findAll, findOne, update, remove };
