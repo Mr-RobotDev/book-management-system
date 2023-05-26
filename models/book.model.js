@@ -1,12 +1,15 @@
-class Book {
-    constructor(id, title, description, author, genre, price) {
-        this.id = id;
-        this.title = title;
-        this.description = description;
-        this.author = author;
-        this.genre = genre;
-        this.price = price;
-    }
-}
+import mongoose from "mongoose";
+
+const bookSchema = mongoose.Schema({
+    title: String,
+    description: String,
+    author: String,
+    genre: String,
+    price: Number
+}, {
+    timestamps: true
+});
+
+const Book = mongoose.model('Books', bookSchema);
 
 export default Book;

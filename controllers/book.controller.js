@@ -3,68 +3,92 @@
 import Book from '../models/book.model.js';
 import eventEmitter from '../utils/event_emitter.util.js';
 
-const books = [];
-
 const create = (req, res) => {
+    const book = new Book({
+        title: req.body.title,
+        description: req.body.description,
+        author: req.body.author,
+        genre: req.body.genre,
+        price: req.body.price
+    });
 
-    const book = new Book(
-        books.length + 1,
-        req.body.title,
-        req.body.description,
-        req.body.author,
-        req.body.genre,
-        req.body.price,
-    );
-    books.push(book);
-
-    eventEmitter.getInstance().emit('book_created', book);
-    res.status(201).json({ message: 'Book created successfully', book });
+    book.save()
+        .then((data) => {
+            eventEmitter.getInstance().emit('book_created', data);
+            res.send(data);
+        }
+        )
+        .catch((err) => {
+            res.status(500).send({
+                error: err.message || 'Some error occurred while creating the Book.'
+            });
+        }
+        );
 }
 
 const findAll = (req, res) => {
-    res.send(books);
+    Book.find()
+        .then((data) => {
+            res.send(data);
+        }
+        )
+        .catch((err) => {
+            res.status(500).send({
+                error: err.message || 'Some error occurred while retrieving books.'
+            });
+        }
+        );
 }
 
 const findOne = (req, res) => {
-    const book = books.find((book) => book.id === parseInt(req.params.id));
-    if (book) {
-        eventEmitter.getInstance().emit('book_found', book);
-        res.send(book);
-    }
-    else {
-        res.status(404).send({ error: 'Book: Not Found' });
-    }
+    const id = req.params.id;
+    Book.findOne({ _id: id })
+        .then((data) => {
+            if (!data) {
+                eventEmitter.getInstance().emit('book_not_found', data);
+                res.status(404).send({ error: 'Book: Not Found' });
+            }
+            else {
+                eventEmitter.getInstance().emit('book_found', data);
+                res.send(data);
+            }
+        }
+        );
+
 }
 
 const update = (req, res) => {
-    const book = books.find((book) => book.id === parseInt(req.params.id));
-    if (!book) {
-        eventEmitter.getInstance().emit('book_not_found', book);
-        res.status(404).send({ error: 'Book: Not Found' });
-    }
-    else {
-        eventEmitter.getInstance().emit('book_found', book);
-        book.title = req.body.title;
-        book.description = req.body.description;
-        book.author = req.body.author;
-        book.genre = req.body.genre;
-        book.price = req.body.price;
-        res.send(book);
-    }
+    const id = req.params.id;
+
+    Book.findByIdAndUpdate(id, { ...req.body }, { new: true })
+        .then((data) => {
+            if (!data) {
+                eventEmitter.getInstance().emit('book_not_found', data);
+                res.status(404).send({ error: 'Book: Not Found' });
+            }
+            else {
+                eventEmitter.getInstance().emit('book_found', data);
+                res.send(data);
+            }
+        }
+        )
 }
 
 const remove = (req, res) => {
-    const book = books.find((book) => book.id === parseInt(req.params.id));
-    if (!book) {
-        eventEmitter.getInstance().emit('book_not_found', book);
-        res.status(404).send({ error: 'Book: Not Found' });
-    }
-    else {
-        eventEmitter.getInstance().emit('book_found', book);
-        const index = books.indexOf(book);
-        books.splice(index, 1);
-        res.send(book);
-    }
+
+    const id = req.params.id;
+    Book.findOneAndRemove({ _id: id })
+        .then((data) => {
+            if (!data) {
+                eventEmitter.getInstance().emit('book_not_found', data);
+                res.status(404).send({ error: 'Book: Not Found' });
+            }
+            else {
+                eventEmitter.getInstance().emit('book_found', data);
+                res.send({ message: 'Book was deleted successfully.' });
+            }
+        }
+        )
 }
 
 export { create, findAll, findOne, update, remove };
