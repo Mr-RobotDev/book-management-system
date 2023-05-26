@@ -1,17 +1,27 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import listEndpoints from 'express-list-endpoints';
+import dotenv from 'dotenv';
+import cors from 'cors';
 
 import bookRoutes from './routes/book.routes.js';
 import eventEmitter from './utils/event_emitter.util.js';
+import database from './db/db.js';
+
+dotenv.config();
 
 const PORT = process.env.PORT || 3000;
-
 const app = express();
+const corsOptions = {
+    origin: '*'
+  };
 
 app.use(bodyParser.json({}));
 app.use(bodyParser.urlencoded({ extended: true }));
 
+database.connectDatabase();
+
+app.use(cors(corsOptions));
 app.use('/api/v1/books', bookRoutes);
 
 console.log(listEndpoints(app));
