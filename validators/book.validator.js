@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-const bookSchema = Joi.object({
+const bookValidatorSchema = Joi.object({
     title: Joi.string().required().messages({
         'string.base': 'Title should be a type of text',
         'string.empty': 'Title cannot be an empty field',
@@ -30,4 +30,4 @@ const bookSchema = Joi.object({
     }),
 });
 
-export default bookSchema;
+export default bookValidatorSchema;
